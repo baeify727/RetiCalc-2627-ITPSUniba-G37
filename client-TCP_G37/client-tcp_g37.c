@@ -1,5 +1,5 @@
-#if defined WIN32
-    #include <winsock.h>
+#if defined _WIN32
+    #include <winsock2.h>
 #else
     #define closesocket close
     #include <sys/socket.h>
@@ -13,7 +13,7 @@
 
 int main() {
 
-    #if defined WIN32
+    #if defined _WIN32
         WSADATA wsaData;
         int result = WSAStartup(MAKEWORD(2,2), &wsaData);
         if (result != 0) {
@@ -26,7 +26,7 @@ int main() {
     if (client_socket < 0) {
         printf("Creazione della socket fallita.\n");
         closesocket(client_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
         return -2;
@@ -49,7 +49,7 @@ int main() {
     if (server_address.sin_addr.s_addr == INADDR_NONE) {
         printf("Indirizzo IP del server non valido.\n");
         closesocket(client_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
     return -3;
@@ -59,7 +59,7 @@ int main() {
     if (connect(client_socket, (struct sockaddr*) &server_address, sizeof(server_address)) < 0) {
         printf("Connessione al server fallita.\n");
         closesocket(client_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
         return -4;
@@ -71,14 +71,14 @@ int main() {
     if (bytes_received < 0) {
         printf("Errore nella ricezione dei dati dal server.\n");
         closesocket(client_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
         return -5;
     } else if (bytes_received == 0) {
         printf("Il server ha chiuso la connessione.\n");
         closesocket(client_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
         return -6;
@@ -98,6 +98,10 @@ int main() {
     if (send(client_socket, (char*)numeri, sizeof(numeri), 0) != sizeof(numeri)) {
             printf("Errore di comunicazione con il client.\n");
             closesocket(client_socket);
+            #if defined _WIN32
+                WSACleanup();
+            #endif
+            return -7;
     }
 
     char res[32];
@@ -107,17 +111,17 @@ int main() {
     if (bytes_received < 0) {
         printf("Errore nella ricezione dei dati dal server.\n");
         closesocket(client_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
-        return -5;
+        return -8;
     } else if (bytes_received == 0) {
         printf("Il server ha chiuso la connessione.\n");
         closesocket(client_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
-        return -6;
+        return -9;
     }
 
     res[bytes_received] = '\0';
@@ -132,7 +136,7 @@ int main() {
 
     
     closesocket(client_socket);
-    #if defined WIN32
+    #if defined _WIN32
         WSACleanup();
     #endif
 

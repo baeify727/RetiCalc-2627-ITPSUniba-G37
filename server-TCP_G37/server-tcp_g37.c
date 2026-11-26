@@ -1,5 +1,6 @@
-#if defined WIN32
+#if defined _WIN32
     #include <winsock2.h>
+    #include <ws2tcpip.h>
 #else
     #define closesocket close
     #include <sys/socket.h>
@@ -14,7 +15,7 @@
 
 int main() {
 
-    #if defined WIN32
+    #if defined _WIN32
         WSADATA wsaData;
         int result = WSAStartup(MAKEWORD(2,2), &wsaData);
         if (result != 0) {
@@ -26,23 +27,16 @@ int main() {
     int server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (server_socket < 0) {
         printf("Creazione della socket fallita.\n");
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
         return -2;
     }
 
 
-
-    struct sockaddr_in server_address;
-    memset(&server_address, 0, sizeof(server_address));
-
-    server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-
     int server_port = -1;
 
-        #if defined WIN32
+        #if defined _WIN32
             do{
                 printf("Inserisci un numero di porta per il server (0 - 65535): ");
                 scanf("%d", &server_port);
@@ -59,7 +53,23 @@ int main() {
                 }
             } while (server_port < 1024 || server_port > 65535);
         #endif
-            
+    
+
+    struct sockaddr_in server_address;
+    memset(&server_address, 0, sizeof(server_address));
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons((unsigned short)server_port);
+
+    // inet_pton converte IP in binario per checkare sia corretto 
+    if (inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) <= 0) {
+        printf("Indirizzo IP del server non valido.\n");
+        closesocket(server_socket);
+        #if defined _WIN32
+            WSACleanup();
+        #endif
+        return -3;
+    }
 
     server_address.sin_port = htons(server_port);
 
@@ -67,24 +77,24 @@ int main() {
     if (bind(server_socket, (struct sockaddr*) &server_address, sizeof(server_address)) != 0) {
         printf("Errore di binding della socket server.\n");
         closesocket(server_socket);
-        #if defined WIN32
-            WSACleanup();
-        #endif
-        return -3;
-    }
-
-    if (listen(server_socket, QUEUE_LENGHT) != 0) {
-        printf("Errore di inizializzazione dell'ascolto per il socket server.\n");
-        closesocket(server_socket);
-        #if defined WIN32
+        #if defined _WIN32
             WSACleanup();
         #endif
         return -4;
     }
 
+    if (listen(server_socket, QUEUE_LENGHT) != 0) {
+        printf("Errore di inizializzazione dell'ascolto per il socket server.\n");
+        closesocket(server_socket);
+        #if defined _WIN32
+            WSACleanup();
+        #endif
+        return -5;
+    }
+
     struct sockaddr_in client_address;
     int client_socket;
-    #if defined WIN32
+    #if defined _WIN32
         int client_len;
     #else
         socklen_t client_len;
@@ -101,10 +111,10 @@ int main() {
         if (client_socket < 0) {
             printf("Errore di inizializzazione del socket client.\n");
             closesocket(server_socket);
-            #if defined WIN32
+            #if defined _WIN32
                 WSACleanup();
             #endif
-            return -5;
+            return -6;
         }
 
         printf("Connessione effettuata al client: %s\n", inet_ntoa(client_address.sin_addr));
@@ -134,17 +144,17 @@ int main() {
         if (bytes_received < 0) {
             printf("Errore nella ricezione dei dati dal server.\n");
             closesocket(client_socket);
-            #if defined WIN32
+            #if defined _WIN32
                 WSACleanup();
             #endif
-            return -5;
+            return -7;
         } else if (bytes_received == 0) {
             printf("Il server ha chiuso la connessione.\n");
             closesocket(client_socket);
-            #if defined WIN32
+            #if defined _WIN32
                 WSACleanup();
             #endif
-            return -6;
+            return -8;
         }
 
         int res = numeri[0] + numeri[1] - numeri[2];
@@ -176,7 +186,7 @@ int main() {
 
     closesocket(server_socket);
 
-    #if defined WIN32
+    #if defined _WIN32
         WSACleanup();
     #endif
 
