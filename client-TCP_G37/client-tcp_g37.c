@@ -1,5 +1,6 @@
 #if defined _WIN32
     #include <winsock2.h>
+    #include <ws2tcpip.h>
 #else
     #define closesocket close
     #include <sys/socket.h>
@@ -25,7 +26,6 @@ int main() {
     int client_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket < 0) {
         printf("Creazione della socket fallita.\n");
-        closesocket(client_socket);
         #if defined _WIN32
             WSACleanup();
         #endif
@@ -43,18 +43,16 @@ int main() {
     struct sockaddr_in server_address;
     memset(&server_address, 0, sizeof(server_address));
     server_address.sin_family = AF_INET;
-    server_address.sin_addr.s_addr = inet_addr(server_ip);
-    server_address.sin_port = htons(server_port);
+    server_address.sin_port = htons((unsigned short)server_port);
 
-    if (server_address.sin_addr.s_addr == INADDR_NONE) {
+    if (inet_pton(AF_INET, server_ip, &server_address.sin_addr) <= 0) {
         printf("Indirizzo IP del server non valido.\n");
         closesocket(client_socket);
         #if defined _WIN32
             WSACleanup();
         #endif
-    return -3;
+        return -3;
     }
-
 
     if (connect(client_socket, (struct sockaddr*) &server_address, sizeof(server_address)) < 0) {
         printf("Connessione al server fallita.\n");
