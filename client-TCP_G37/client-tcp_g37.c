@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#define BUFFER_SIZE 1024
 
 int main() {
 
@@ -24,6 +25,7 @@ int main() {
     int client_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (client_socket < 0) {
         printf("Creazione della socket fallita.\n");
+        closesocket(client_socket);
         #if defined WIN32
             WSACleanup();
         #endif
@@ -44,20 +46,50 @@ int main() {
     server_address.sin_addr.s_addr = inet_addr(server_ip);
     server_address.sin_port = htons(server_port);
 
-
-    if (connect(client_socket, (struct sockaddr*) &server_address, sizeof(server_address)) < 0) {
-        printf("Connessione al server fallita.\n");
+    if (server_address.sin_addr.s_addr == INADDR_NONE) {
+        printf("Indirizzo IP del server non valido.\n");
+        closesocket(client_socket);
         #if defined WIN32
             WSACleanup();
         #endif
-        return -3;
+    return -3;
     }
-    printf("Connessione al server effettuata correttamente.\n");
 
 
+    if (connect(client_socket, (struct sockaddr*) &server_address, sizeof(server_address)) < 0) {
+        printf("Connessione al server fallita.\n");
+        closesocket(client_socket);
+        #if defined WIN32
+            WSACleanup();
+        #endif
+        return -4;
+    }
+
+    char buffer[BUFFER_SIZE];
+    int bytes_received = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+
+    if (bytes_received < 0) {
+        printf("Errore nella ricezione dei dati dal server.\n");
+        closesocket(client_socket);
+        #if defined WIN32
+            WSACleanup();
+        #endif
+        return -5;
+    } else if (bytes_received == 0) {
+        printf("Il server ha chiuso la connessione.\n");
+        closesocket(client_socket);
+        #if defined WIN32
+            WSACleanup();
+        #endif
+        return -6;
+    }
+
+    buffer[bytes_received] = '\0';
+    printf("%s", buffer);
+
+    
 
     closesocket(client_socket);
-
     #if defined WIN32
         WSACleanup();
     #endif

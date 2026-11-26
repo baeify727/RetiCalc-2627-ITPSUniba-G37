@@ -83,12 +83,18 @@ int main() {
 
     struct sockaddr_in client_address;
     int client_socket;
-    int client_len;
+    #if defined WIN32
+        int client_len;
+    #else
+        socklen_t client_len;
+    #endif
 
     printf("In attesa di connessione con un client...\n");
 
     while (1) {
-        client_len = sizeof(client_socket);
+
+        client_len = sizeof(client_address);
+            
 
         client_socket = accept(server_socket, (struct sockaddr*) &client_address, &client_len);
         if (client_socket < 0) {
@@ -101,7 +107,20 @@ int main() {
         }
 
         printf("Connessione effettuata al client: %s\n", inet_ntoa(client_address.sin_addr));
+
+        char connection_successful_string[] = "Connessione effettuata correttamente.\n";
+        int con_string_len = strlen(connection_successful_string);
+
+        if (send(client_socket, connection_successful_string, con_string_len, 0) != con_string_len) {
+            printf("Errore di comunicazione con il client.\n");
+            closesocket(server_socket);
+            continue;
+        }
+
+        closesocket(client_socket);
     }
+
+ 
     
 
     closesocket(server_socket);
