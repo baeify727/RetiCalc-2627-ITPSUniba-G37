@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #define QUEUE_LENGHT 6
+#define BUFFER_SIZE 1024
 
 int main() {
 
@@ -116,6 +117,46 @@ int main() {
             closesocket(server_socket);
             continue;
         }
+
+        char int_request_str[] = "Inserisci 3 numeri interi da inviarmi, ognuno seguito da uno spazio: \n";
+        int int_req_len = strlen(int_request_str);
+
+        if (send(client_socket, int_request_str, int_req_len, 0) != int_req_len) {
+            printf("Errore di comunicazione con il client.\n");
+            closesocket(server_socket);
+            continue;
+        }
+
+        int numeri[3];
+        int bytes_received = recv(client_socket, (char*) &numeri, sizeof(numeri), 0);
+        
+
+        if (bytes_received < 0) {
+            printf("Errore nella ricezione dei dati dal server.\n");
+            closesocket(client_socket);
+            #if defined WIN32
+                WSACleanup();
+            #endif
+            return -5;
+        } else if (bytes_received == 0) {
+            printf("Il server ha chiuso la connessione.\n");
+            closesocket(client_socket);
+            #if defined WIN32
+                WSACleanup();
+            #endif
+            return -6;
+        }
+
+        int res = numeri[0] + numeri[1] - numeri[2];
+        printf("%d + %d - %d = %d\n", numeri[0], numeri[1], numeri[2], res); 
+
+        if (send(client_socket, &res, sizeof(res), 0) != sizeof(res)) {
+            printf("Errore di comunicazione con il client.\n");
+            closesocket(client_socket);
+            continue;
+        }
+
+
 
         closesocket(client_socket);
     }
