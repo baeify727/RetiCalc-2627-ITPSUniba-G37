@@ -149,11 +149,21 @@ int main() {
 
         int res = numeri[0] + numeri[1] - numeri[2];
         printf("%d + %d - %d = %d\n", numeri[0], numeri[1], numeri[2], res); 
+        char quit_str[] = "QUIT";
+        int quit_str_len = strlen(quit_str);
 
-        if (send(client_socket, &res, sizeof(res), 0) != sizeof(res)) {
+        if (res == 100) {
+            if (send(client_socket, (char*) quit_str, quit_str_len, 0) != quit_str_len) {
+                printf("Errore di comunicazione con il client.\n");
+                closesocket(client_socket);
+                continue;
+            }
+        } else {
+            if (send(client_socket, &res, sizeof(res), 0) != sizeof(res)) {
             printf("Errore di comunicazione con il client.\n");
             closesocket(client_socket);
             continue;
+            }
         }
 
 

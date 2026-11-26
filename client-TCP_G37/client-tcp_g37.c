@@ -100,8 +100,9 @@ int main() {
             closesocket(client_socket);
     }
 
-    int res;
-    bytes_received = recv(client_socket, (char*) &res, BUFFER_SIZE - 1, 0);
+    char res[32];
+    int res_len = strlen(res);
+    bytes_received = recv(client_socket, res, res_len, 0);
 
     if (bytes_received < 0) {
         printf("Errore nella ricezione dei dati dal server.\n");
@@ -119,10 +120,14 @@ int main() {
         return -6;
     }
 
-    buffer[bytes_received] = '\0';
-    memset(&buffer, 0, sizeof(buffer));
+    res[bytes_received] = '\0';
+    if(strcmp(res, "QUIT") == 0) {
+        printf("%d\n", *res);
+    } else {
+        printf("%s\n", res);
+    }
+    
 
-    printf("%d\n", res);
 
 
     
