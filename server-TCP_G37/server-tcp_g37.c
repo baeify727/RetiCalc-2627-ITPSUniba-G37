@@ -128,18 +128,6 @@ int main() {
             continue;
         }
 
-        char int_request_str[] = "Inserisci 3 numeri interi da inviarmi, ognuno seguito da uno spazio: \n";
-        int int_req_len = strlen(int_request_str);
-
-        if (send(client_socket, int_request_str, int_req_len, 0) != int_req_len) {
-            printf("Errore di comunicazione con il client.\n");
-            closesocket(client_socket);
-            #if defined _WIN32
-                WSACleanup();
-            #endif
-            continue;
-        }
-
         int numeri[3];
         int bytes_received;
         int res;
@@ -148,23 +136,11 @@ int main() {
 
         do {
 
-            memset(&bytes_received, 0, sizeof(bytes_received));
             bytes_received = recv(client_socket, (char*) &numeri, sizeof(numeri), 0);
 
-            if (bytes_received < 0) {
-                printf("Errore nella ricezione dei dati dal client.\n");
-                closesocket(client_socket);
-                #if defined _WIN32
-                    WSACleanup();
-                #endif
-                return -7;
-            } else if (bytes_received == 0) {
-                printf("Il server ha chiuso la connessione.\n");
-                closesocket(client_socket);
-                #if defined _WIN32
-                    WSACleanup();
-                #endif
-                return -8;
+            if (bytes_received <= 0) {
+                printf("Client disconnesso o errore di ricezione.\n");
+                break;
             }
 
             res = numeri[0] + numeri[1] - numeri[2];
@@ -181,11 +157,7 @@ int main() {
             out_msg_len = strlen(out_msg);
             if (send(client_socket, out_msg, out_msg_len, 0) != out_msg_len) {
                 printf("Errore di comunicazione con il client.\n");
-                closesocket(client_socket);
-                #if defined _WIN32
-                    WSACleanup();
-                #endif
-                continue;
+                break;
             }
 
         } while (strcmp(out_msg, "QUIT") != 0);

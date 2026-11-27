@@ -95,6 +95,8 @@ int main() {
         memset(&res, 0, sizeof(res));
         bytes_received = 0;
 
+        printf("Inserisci 3 numeri, separati da uno spazio: ");
+
         while(scanf("%d %d %d", &numeri[0], &numeri[1], &numeri[2]) != 3) {
             printf("Input non valido, riprova: ");
             while ((ch = getchar()) != '\n' && ch != EOF);
@@ -129,7 +131,7 @@ int main() {
         }
 
         res[bytes_received] = '\0';
-        printf("%s\n", res);
+        printf("Risultato: %s\n", res);
 
     } while (strcmp(res, "QUIT") != 0);
 
