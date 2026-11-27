@@ -141,55 +141,60 @@ int main() {
         }
 
         int numeri[3];
-        int bytes_received = recv(client_socket, (char*) &numeri, sizeof(numeri), 0);
-        
-
-        if (bytes_received < 0) {
-            printf("Errore nella ricezione dei dati dal server.\n");
-            closesocket(client_socket);
-            #if defined _WIN32
-                WSACleanup();
-            #endif
-            return -7;
-        } else if (bytes_received == 0) {
-            printf("Il server ha chiuso la connessione.\n");
-            closesocket(client_socket);
-            #if defined _WIN32
-                WSACleanup();
-            #endif
-            return -8;
-        }
-
-        int res = numeri[0] + numeri[1] - numeri[2];
-        printf("%d + %d - %d = %d\n", numeri[0], numeri[1], numeri[2], res); 
-
+        int bytes_received;
+        int res;
         char out_msg[32];
-        if (res == 100) {
-            snprintf(out_msg, sizeof(out_msg), "QUIT");
-            printf("Client disconnesso\n");
-        } else {
-            snprintf(out_msg, sizeof(out_msg), "%d", res);
-        }
+        int out_msg_len;
 
-        int out_msg_len = strlen(out_msg);
-        if (send(client_socket, out_msg, out_msg_len, 0) != out_msg_len) {
-            printf("Errore di comunicazione con il client.\n");
-            closesocket(client_socket);
-            #if defined _WIN32
-                WSACleanup();
-            #endif
-            continue;
-        }
+        do {
 
+            memset(&bytes_received, 0, sizeof(bytes_received));
+            bytes_received = recv(client_socket, (char*) &numeri, sizeof(numeri), 0);
 
+            if (bytes_received < 0) {
+                printf("Errore nella ricezione dei dati dal client.\n");
+                closesocket(client_socket);
+                #if defined _WIN32
+                    WSACleanup();
+                #endif
+                return -7;
+            } else if (bytes_received == 0) {
+                printf("Il server ha chiuso la connessione.\n");
+                closesocket(client_socket);
+                #if defined _WIN32
+                    WSACleanup();
+                #endif
+                return -8;
+            }
 
+            res = numeri[0] + numeri[1] - numeri[2];
+            printf("%d + %d - %d = %d\n", numeri[0], numeri[1], numeri[2], res); 
 
+        
+            if (res == 100) {
+                snprintf(out_msg, sizeof(out_msg), "QUIT");
+                printf("Client disconnesso\n");
+            } else {
+                snprintf(out_msg, sizeof(out_msg), "%d", res);
+            }
 
+            out_msg_len = strlen(out_msg);
+            if (send(client_socket, out_msg, out_msg_len, 0) != out_msg_len) {
+                printf("Errore di comunicazione con il client.\n");
+                closesocket(client_socket);
+                #if defined _WIN32
+                    WSACleanup();
+                #endif
+                continue;
+            }
+
+        } while (strcmp(out_msg, "QUIT") != 0);
+        
         closesocket(client_socket);
+        #if defined _WIN32
+            WSACleanup();
+        #endif
     }
-
- 
-    
 
     closesocket(server_socket);
 

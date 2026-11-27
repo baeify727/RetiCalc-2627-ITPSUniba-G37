@@ -86,48 +86,54 @@ int main() {
     printf("%s", buffer);
     memset(&buffer, 0, sizeof(buffer));
 
+    char res[32];
     int numeri[3];
-    while(scanf("%d %d %d", &numeri[0], &numeri[1], &numeri[2]) != 3) {
-        printf("Input non valido, riprova: ");
-        int ch;
-        while ((ch = getchar()) != '\n' && ch != EOF);
-    }
+    int ch;
 
-    if (send(client_socket, (char*)numeri, sizeof(numeri), 0) != sizeof(numeri)) {
+    do {
+
+        memset(&res, 0, sizeof(res));
+        bytes_received = 0;
+
+        while(scanf("%d %d %d", &numeri[0], &numeri[1], &numeri[2]) != 3) {
+            printf("Input non valido, riprova: ");
+            while ((ch = getchar()) != '\n' && ch != EOF);
+        }
+
+        if (send(client_socket, (char*)numeri, sizeof(numeri), 0) != sizeof(numeri)) {
             printf("Errore di comunicazione con il client.\n");
             closesocket(client_socket);
             #if defined _WIN32
                 WSACleanup();
             #endif
             return -7;
-    }
-
-    char res[32];
-    bytes_received = recv(client_socket, res, sizeof(res)-1, 0);
-
-    if (bytes_received < 0) {
-        printf("Errore nella ricezione dei dati dal server.\n");
-        closesocket(client_socket);
-        #if defined _WIN32
-            WSACleanup();
-        #endif
-        return -5;
-    } else if (bytes_received == 0) {
-        printf("Il server ha chiuso la connessione.\n");
-        closesocket(client_socket);
-        #if defined _WIN32
-            WSACleanup();
-        #endif
-        return -6;
-    }
-
-    res[bytes_received] = '\0';
-    printf("%s\n", res);
-    
-
-
+        }
 
     
+        bytes_received = recv(client_socket, res, sizeof(res)-1, 0);
+
+        if (bytes_received < 0) {
+            printf("Errore nella ricezione dei dati dal server.\n");
+            closesocket(client_socket);
+            #if defined _WIN32
+                WSACleanup();
+            #endif
+            return -5;
+        } else if (bytes_received == 0) {
+            printf("Il server ha chiuso la connessione.\n");
+            closesocket(client_socket);
+            #if defined _WIN32
+                WSACleanup();
+            #endif
+            return -6;
+        }
+
+        res[bytes_received] = '\0';
+        printf("%s\n", res);
+
+    } while (strcmp(res, "QUIT") != 0);
+
+
     closesocket(client_socket);
     #if defined _WIN32
         WSACleanup();
