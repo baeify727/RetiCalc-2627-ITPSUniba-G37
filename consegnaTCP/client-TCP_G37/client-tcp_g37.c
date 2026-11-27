@@ -1,11 +1,14 @@
 #if defined _WIN32
     #include <winsock2.h>
     #include <ws2tcpip.h>
+    typedef SOCKET socket_t;
 #else
     #define closesocket close
     #include <sys/socket.h>
     #include <arpa/inet.h>
     #include <unistd.h>
+    #define INVALID_SOCKET (-1)
+    typedef int socket_t;
 #endif
 
 #include <stdio.h>
@@ -23,8 +26,8 @@ int main() {
         }
     #endif
 
-    int client_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (client_socket < 0) {
+    socket_t client_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (client_socket == INVALID_SOCKET) {
         printf("Creazione della socket fallita.\n");
         #if defined _WIN32
             WSACleanup();

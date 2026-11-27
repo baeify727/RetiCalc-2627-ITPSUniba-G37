@@ -1,11 +1,14 @@
 #if defined _WIN32
     #include <winsock2.h>
     #include <ws2tcpip.h>
+    typedef SOCKET socket_t;
 #else
     #define closesocket close
     #include <sys/socket.h>
     #include <arpa/inet.h>
     #include <unistd.h>
+    #define INVALID_SOCKET (-1)
+    typedef int socket_t;
 #endif
 
 #include <stdio.h>
@@ -24,8 +27,8 @@ int main() {
         }
     #endif
     
-    int server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (server_socket < 0) {
+    socket_t server_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (server_socket == INVALID_SOCKET) {
         printf("Creazione della socket fallita.\n");
         #if defined _WIN32
             WSACleanup();
@@ -36,23 +39,13 @@ int main() {
 
     int server_port = -1;
 
-        #if defined _WIN32
-            do{
-                printf("Inserisci un numero di porta per il server (0 - 65535): ");
-                scanf("%d", &server_port);
-                if(server_port < 0 || server_port > 65535) {
-                    printf("Valore per la porta non valido.\n");
-                }
-            } while (server_port < 0 || server_port > 65535);   
-        #else
-            do{
-                printf("Inserisci un numero di porta per il server (1024 - 65535): ");
-                scanf("%d", &server_port);
-                if(server_port < 1024 || server_port > 65535) {
-                    printf("Valore per la porta non valido.\n");
-                }
-            } while (server_port < 1024 || server_port > 65535);
-        #endif
+    do{
+        printf("Inserisci un numero di porta per il server (1024 - 65535): ");
+        scanf("%d", &server_port);
+        if(server_port < 1024 || server_port > 65535) {
+            printf("Valore per la porta non valido.\n");
+        }
+    } while (server_port < 1024 || server_port > 65535);
     
 
     struct sockaddr_in server_address;
@@ -70,8 +63,6 @@ int main() {
         #endif
         return -3;
     }
-
-    server_address.sin_port = htons(server_port);
 
 
     if (bind(server_socket, (struct sockaddr*) &server_address, sizeof(server_address)) != 0) {
@@ -93,7 +84,7 @@ int main() {
     }
 
     struct sockaddr_in client_address;
-    int client_socket;
+    socket_t client_socket;
     #if defined _WIN32
         int client_len;
     #else
@@ -108,7 +99,7 @@ int main() {
             
 
         client_socket = accept(server_socket, (struct sockaddr*) &client_address, &client_len);
-        if (client_socket < 0) {
+        if (client_socket == INVALID_SOCKET) {
             printf("Errore di inizializzazione del socket client.\n");
             closesocket(server_socket);
             #if defined _WIN32
@@ -163,9 +154,6 @@ int main() {
         } while (strcmp(out_msg, "QUIT") != 0);
         
         closesocket(client_socket);
-        #if defined _WIN32
-            WSACleanup();
-        #endif
     }
 
     closesocket(server_socket);
