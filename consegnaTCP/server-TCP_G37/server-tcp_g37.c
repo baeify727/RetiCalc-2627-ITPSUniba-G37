@@ -38,11 +38,15 @@ int main() {
 
 
     int server_port = -1;
+    int ch;
 
     do{
         printf("Inserisci un numero di porta per il server (1024 - 65535): ");
-        scanf("%d", &server_port);
-        if(server_port < 1024 || server_port > 65535) {
+        if (scanf("%d", &server_port) != 1) {
+            server_port = -1;
+            while ((ch = getchar()) != '\n' && ch != EOF);
+        }
+        if (server_port < 1024 || server_port > 65535) {
             printf("Valore per la porta non valido.\n");
         }
     } while (server_port < 1024 || server_port > 65535);
