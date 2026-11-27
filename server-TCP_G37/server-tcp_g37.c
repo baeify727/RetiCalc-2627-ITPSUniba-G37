@@ -124,7 +124,7 @@ int main() {
 
         if (send(client_socket, connection_successful_string, con_string_len, 0) != con_string_len) {
             printf("Errore di comunicazione con il client.\n");
-            closesocket(server_socket);
+            closesocket(client_socket);
             continue;
         }
 
@@ -133,7 +133,10 @@ int main() {
 
         if (send(client_socket, int_request_str, int_req_len, 0) != int_req_len) {
             printf("Errore di comunicazione con il client.\n");
-            closesocket(server_socket);
+            closesocket(client_socket);
+            #if defined _WIN32
+                WSACleanup();
+            #endif
             continue;
         }
 
@@ -159,22 +162,26 @@ int main() {
 
         int res = numeri[0] + numeri[1] - numeri[2];
         printf("%d + %d - %d = %d\n", numeri[0], numeri[1], numeri[2], res); 
-        char quit_str[] = "QUIT";
-        int quit_str_len = strlen(quit_str);
 
+        char out_msg[32];
         if (res == 100) {
-            if (send(client_socket, (char*) quit_str, quit_str_len, 0) != quit_str_len) {
-                printf("Errore di comunicazione con il client.\n");
-                closesocket(client_socket);
-                continue;
-            }
+            snprintf(out_msg, sizeof(out_msg), "QUIT");
+            printf("Client disconnesso\n");
         } else {
-            if (send(client_socket, &res, sizeof(res), 0) != sizeof(res)) {
+            snprintf(out_msg, sizeof(out_msg), "%d", res);
+        }
+
+        int out_msg_len = strlen(out_msg);
+        if (send(client_socket, out_msg, out_msg_len, 0) != out_msg_len) {
             printf("Errore di comunicazione con il client.\n");
             closesocket(client_socket);
+            #if defined _WIN32
+                WSACleanup();
+            #endif
             continue;
-            }
         }
+
+
 
 
 

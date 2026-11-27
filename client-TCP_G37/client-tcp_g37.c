@@ -103,8 +103,7 @@ int main() {
     }
 
     char res[32];
-    int res_len = strlen(res);
-    bytes_received = recv(client_socket, res, res_len, 0);
+    bytes_received = recv(client_socket, res, sizeof(res)-1, 0);
 
     if (bytes_received < 0) {
         printf("Errore nella ricezione dei dati dal server.\n");
@@ -112,22 +111,18 @@ int main() {
         #if defined _WIN32
             WSACleanup();
         #endif
-        return -8;
+        return -5;
     } else if (bytes_received == 0) {
         printf("Il server ha chiuso la connessione.\n");
         closesocket(client_socket);
         #if defined _WIN32
             WSACleanup();
         #endif
-        return -9;
+        return -6;
     }
 
     res[bytes_received] = '\0';
-    if(strcmp(res, "QUIT") == 0) {
-        printf("%d\n", *res);
-    } else {
-        printf("%s\n", res);
-    }
+    printf("%s\n", res);
     
 
 
