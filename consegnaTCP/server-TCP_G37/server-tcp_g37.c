@@ -3,10 +3,10 @@
     #include <ws2tcpip.h>
     typedef SOCKET socket_t;
 #else
-    #define closesocket close
     #include <sys/socket.h>
     #include <arpa/inet.h>
     #include <unistd.h>
+    #define closesocket close
     #define INVALID_SOCKET (-1)
     typedef int socket_t;
 #endif
@@ -58,7 +58,6 @@ int main() {
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons((unsigned short)server_port);
 
-    // inet_pton converte IP in binario per checkare sia corretto 
     if (inet_pton(AF_INET, "127.0.0.1", &server_address.sin_addr) <= 0) {
         printf("Indirizzo IP del server non valido.\n");
         closesocket(server_socket);

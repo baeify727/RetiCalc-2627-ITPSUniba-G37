@@ -2,11 +2,13 @@
     #include <winsock2.h>
     #include <ws2tcpip.h>
     typedef SOCKET socket_t;
+    #define wait() Sleep(2000)
 #else
-    #define closesocket close
     #include <sys/socket.h>
     #include <arpa/inet.h>
     #include <unistd.h>
+    #define closesocket close
+    #define wait() sleep(2)
     #define INVALID_SOCKET (-1)
     typedef int socket_t;
 #endif
@@ -30,6 +32,7 @@ int main() {
     if (client_socket == INVALID_SOCKET) {
         printf("Creazione della socket fallita.\n");
         #if defined _WIN32
+            wait();
             WSACleanup();
         #endif
         return -2;
@@ -52,6 +55,7 @@ int main() {
         printf("Indirizzo IP del server non valido.\n");
         closesocket(client_socket);
         #if defined _WIN32
+            wait();
             WSACleanup();
         #endif
         return -3;
@@ -60,7 +64,8 @@ int main() {
     if (connect(client_socket, (struct sockaddr*) &server_address, sizeof(server_address)) < 0) {
         printf("Connessione al server fallita.\n");
         closesocket(client_socket);
-        #if defined _WIN32
+        #if defined _WIN32  
+            wait();
             WSACleanup();
         #endif
         return -4;
@@ -73,6 +78,7 @@ int main() {
         printf("Errore nella ricezione dei dati dal server.\n");
         closesocket(client_socket);
         #if defined _WIN32
+            wait();
             WSACleanup();
         #endif
         return -5;
@@ -80,6 +86,7 @@ int main() {
         printf("Il server ha chiuso la connessione.\n");
         closesocket(client_socket);
         #if defined _WIN32
+            wait();
             WSACleanup();
         #endif
         return -6;
@@ -106,9 +113,10 @@ int main() {
         }
 
         if (send(client_socket, (char*)numeri, sizeof(numeri), 0) != sizeof(numeri)) {
-            printf("Errore di comunicazione con il client.\n");
+            printf("Errore di comunicazione con il server.\n");
             closesocket(client_socket);
             #if defined _WIN32
+                wait();
                 WSACleanup();
             #endif
             return -7;
@@ -121,6 +129,7 @@ int main() {
             printf("Errore nella ricezione dei dati dal server.\n");
             closesocket(client_socket);
             #if defined _WIN32
+                wait();
                 WSACleanup();
             #endif
             return -5;
@@ -128,6 +137,7 @@ int main() {
             printf("Il server ha chiuso la connessione.\n");
             closesocket(client_socket);
             #if defined _WIN32
+                wait();
                 WSACleanup();
             #endif
             return -6;
@@ -141,8 +151,8 @@ int main() {
 
     closesocket(client_socket);
     #if defined _WIN32
+        wait();
         WSACleanup();
     #endif
-
     return 0;
 }
